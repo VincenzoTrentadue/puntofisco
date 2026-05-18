@@ -15,13 +15,22 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: system + ' IMPORTANTE: Rispondi SEMPRE e SOLO in italiano, qualunque sia la lingua della domanda.',
+        max_tokens: 2000,
+        system: system + ' IMPORTANTE: Rispondi SEMPRE e SOLO in italiano. Cita sempre gli articoli di legge aggiornati e le circolari dell Agenzia delle Entrate più recenti. Se non sei sicuro della normativa aggiornata, dillo esplicitamente.',
+        tools: [
+          {
+            type: 'web_search_20250305',
+            name: 'web_search',
+          }
+        ],
         messages,
       }),
     });
     const data = await response.json();
-    res.status(200).json(data);
+    const textContent = data.content?.find(c => c.type === 'text');
+    res.status(200).json({
+      content: [{ type: 'text', text: textContent?.text || 'Nessuna risposta disponibile.' }]
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
